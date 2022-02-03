@@ -3,6 +3,7 @@ import numpy as np
 import torch.nn as nn
 from conf import device 
 
+
 class GaussianNoise(nn.Module):
     """
     Create Gaussian noise on the input with specified signal to noise ration snr.
