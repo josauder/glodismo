@@ -4,6 +4,43 @@ import torch.nn.functional as F
 from conf import device 
 import numpy as np
 
+def get_median_backward_op(phi, n, d, test=False, train_matrix=True):
+    if test:
+        def backward_op(y):
+                  xh = torch.zeros(y.shape[0], n, device=device)
+                  c = y[:, :, None].repeat(1, 1, n)
+                  i, ii, iii = torch.where(
+                      torch.abs(phi.unsqueeze(0).repeat(y.shape[0], 1, 1).transpose(2, 1)) > 0.0001)
+                  l = c[i, iii, ii] 
+                  l = l.reshape(y.shape[0], n, d)
+                  l1 = torch.median(l, dim=-1)[0]  #
+                  return l1
+        return backward_op
+    else:
+        
+        if train_matrix:
+            def backward_op(y):
+                xh = torch.zeros(y.shape[0], n, device=device)
+                c = y[:, :, None].repeat(1, 1, n)  # .reshape(b,m,n)
+                i, ii, iii = torch.where(torch.abs(phi.transpose(2, 1)) > 0.0001) 
+                l = c[i, iii, ii]  # .reshape(b,d,n)#
+                l = l.reshape(y.shape[0], n, d)
+                l1 = torch.median(l, dim=-1)[0]  #
+                return l1
+            return backward_op
+
+        else:
+            def backward_op(y):
+                xh = torch.zeros(y.shape[0], n, device=device)
+                c = y[:, :, None].repeat(1, 1, n)  # .reshape(b,m,n)
+                i, ii, iii = torch.where(torch.abs(phi.repeat(y.shape[0], 1, 1).transpose(2, 1)) > 0.0001)  
+                l = c[i, iii, ii]  # .reshape(b,d,n)#
+                l = l.reshape(y.shape[0], n, d)
+                l1 = torch.median(l, dim=-1)[0]  #
+                return l1  
+            return backward_op
+
+
 def hard_threshold(x, s):
     x = x.reshape(x.shape[0], -1)
 

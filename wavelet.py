@@ -3,10 +3,9 @@ import torch
 from conf import device
 
 class WT(object):
-
+    """Adapted from: https://lernapparat.de/2d-wavelet-transform-pytorch"""
     def __init__(self):
         w = pywt.Wavelet('bior2.2')
-        #w = pywt.Wavelet('db1')
         dec_hi = torch.Tensor(w.dec_hi[::-1]).to(device)
         dec_lo = torch.Tensor(w.dec_lo[::-1]).to(device)
         rec_hi = torch.Tensor(w.rec_hi).to(device)

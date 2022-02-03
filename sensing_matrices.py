@@ -203,8 +203,8 @@ class ConstructedPooling:
 
 
 def circulant(tensor, dim):
-    """get a circulant version of the tensor along the {dim} dimension.
-    
+    """From: https://stackoverflow.com/questions/69820726/is-there-a-way-to-compute-a-circulant-matrix-in-pytorch
+    get a circulant version of the tensor along the {dim} dimension.
     The additional axis is appended as the last dimension.
     E.g. tensor=[0,1,2], dim=0 --> [[0,1,2],[2,0,1],[1,2,0]]"""
     S = tensor.shape[dim]

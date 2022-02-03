@@ -3,7 +3,7 @@ from conf import device
 import torch
 from tqdm import tqdm
 import numpy as np
-
+from recovery import get_median_backward_op
 
 def test_epoch(model, sensing_matrix, data, noise, use_median, n, positive_threshold):
   with torch.no_grad():
@@ -20,15 +20,7 @@ def test_epoch(model, sensing_matrix, data, noise, use_median, n, positive_thres
     false_negatives = []
     
     if use_median:
-        def backward_op(y):
-                  xh = torch.zeros(y.shape[0], n, device=device)
-                  c = y[:, :, None].repeat(1, 1, n)
-                  i, ii, iii = torch.where(
-                      torch.abs(phi.unsqueeze(0).repeat(X.shape[0], 1, 1).transpose(2, 1)) > 0.0001)
-                  l = c[i, iii, ii] 
-                  l = l.reshape(y.shape[0], n, sensing_matrix.d)
-                  l1 = torch.median(l, dim=-1)[0]  #
-                  return l1
+      backward_op = get_median_backward_op(phi, n, sensing_matrix.d, test=True)
 
     for iteration, (X, _) in tqdm(enumerate(iter(data.test_loader))):
       X = X.to(device) 
@@ -73,28 +65,14 @@ def train_epoch(model, sensing_matrix, data, noise, use_median, n, positive_thre
       if not use_median:
         backward_op = lambda x: torch.bmm(x.unsqueeze(1), phi).squeeze(1)
       else:
-        def backward_op(y):
-          xh = torch.zeros(y.shape[0], n, device=device)
-          c = y[:, :, None].repeat(1, 1, n)  # .reshape(b,m,n)
-          i, ii, iii = torch.where(torch.abs(phi.transpose(2, 1)) > 0.0001)  # 5000, 5000
-          l = c[i, iii, ii]  # .reshape(b,d,n)#
-          l = l.reshape(y.shape[0], n, sensing_matrix.d)
-          l1 = torch.median(l, dim=-1)[0]  #
-          return l1
+        backward_op = get_median_backward_op(phi, n, sensing_matrix.d, test=False, train_matrix=True)
     else:
       phi = sensing_matrix(1, test=True)
       forward_op = lambda x: torch.matmul(x, phi[0].T)
       if not use_median:    
         backward_op = lambda x: torch.matmul(x, phi[0])
       else:
-        def backward_op(y):
-          xh = torch.zeros(y.shape[0], n, device=device)
-          c = y[:, :, None].repeat(1, 1, n)  # .reshape(b,m,n)
-          i, ii, iii = torch.where(torch.abs(phi.repeat(y.shape[0], 1, 1).transpose(2, 1)) > 0.0001)  # 5000, 5000
-          l = c[i, iii, ii]  # .reshape(b,d,n)#
-          l = l.reshape(y.shape[0], n, sensing_matrix.d)
-          l1 = torch.median(l, dim=-1)[0]  #
-          return l1  
+        backward_op = get_median_backward_op(phi, n, sensing_matrix.d, test=False, train_matrix=False)
 
       
 

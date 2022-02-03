@@ -1,5 +1,5 @@
 from data import MNIST, BernoulliSyntheticDataset, MNISTWavelet, Synthetic, BagOfWords
-from models import NA_ALISTA, IHT
+from recovery import NA_ALISTA, IHT
 from train import run_experiment
 from baseline import run_experiment_baseline, NeighborGenerator
 from sensing_matrices import CompletelyLearned, SuperPixel, Pixel, LeftDRegularGraph, LoadedFromNumpy, ConstructedPooling
@@ -8,7 +8,7 @@ import numpy as np
 from conf import device
 import matplotlib.pyplot as plt
 import pandas as pd
-
+import os
 
 def save_log(results, name):
   if len(results) == 2:
@@ -27,6 +27,9 @@ from data import BernoulliSyntheticDataset
 model = IHT(15, s)
 epochs = 250
 
+if not os.path.exists("results"):
+  os.makedirs("results")
+
 for data in [MNISTWavelet(), Synthetic(n, s, s, BernoulliSyntheticDataset, batch_size=512)]:
   for m in  [50, 200]:
     for seed in range(0, 10):
@@ -34,7 +37,7 @@ for data in [MNISTWavelet(), Synthetic(n, s, s, BernoulliSyntheticDataset, batch
         scalars = []
         
         # Find optimal scaling factor!
-        for scalar in np.linspace(0.1 , 1, 25):
+        for scalar in np.linspace(0.1 , 1, 55):
           losses.append(run_experiment(
               n=n,
               sensing_matrix=Pixel(m, n, 32, scalar, seed, False), 
@@ -80,15 +83,15 @@ for data in [MNISTWavelet(), Synthetic(n, s, s, BernoulliSyntheticDataset, batch
             noise=GaussianNoise(40),
             epochs=epochs,
             positive_threshold=0.01,
-            initial_temperature= 0.003,
-            temperature_decay=0.9998,
+            initial_temperature= 0.0012,
+            temperature_decay=0.9997,
             greedy=False,
         ),  "results/singlepixel_baseline_"+data.name+"seed_"+str(seed)+"m_"+str(m)+"_2")
 
         # Run Greedy Baseline
         save_log(run_experiment_baseline(
             n=n,
-            sensing_matrix=NeighborGenerator(Pixel(m, n, 32, scalars[np.argmin(losses)]*0.95, seed, False).to(device)), 
+            sensing_matrix=NeighborGenerator(Pixel(m, n, 32, scalars[np.argmin(losses)]*0.9, seed, False).to(device)), 
             model=model,
             data=data,
             use_mse=True,
@@ -97,7 +100,7 @@ for data in [MNISTWavelet(), Synthetic(n, s, s, BernoulliSyntheticDataset, batch
             noise=GaussianNoise(40),
             epochs=epochs,
             positive_threshold=0.01,
-            initial_temperature= 0.0012,
-            temperature_decay=0.99975,
+            initial_temperature=None,
+            temperature_decay=None,
             greedy=True,
         ), "results/singlepixel_baseline_greedy_"+data.name+"seed_"+str(seed)+"m_"+str(m)+"_2")
