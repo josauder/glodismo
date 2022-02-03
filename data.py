@@ -94,6 +94,7 @@ class BagOfWords:
     self.train_data.reset = lambda: None
     self.s = int((self.train_data!=0).float().sum(axis=1).mean())
     self.s_test = int((self.test_data!=0).float().sum(axis=1).mean())
+
     print("Average support size in train set:", self.s, " and in test set:", self.s_test)
     self.psi = lambda x:x
     self.psistar = lambda x:x
