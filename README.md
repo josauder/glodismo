@@ -1,6 +1,6 @@
 # GLODISMO: Gradient-Based Learning of Discrete Structured Measurement Operators for Signal Recovery
 
-This is the code to the paper: Gradient-Based Learning of Discrete Structured Measurement Operators for Signal Recovery by:
+This is the code to the paper: [Gradient-Based Learning of Discrete Structured Measurement Operators for Signal Recovery](https://arxiv.org/abs/2202.03391) by:
 
 Jonathan Sauder (EPFL)
 
