@@ -179,7 +179,7 @@ def run_experiment_baseline(
     opt = BaselineOptimizer(initial_temperature, temperature_decay, greedy=greedy)
 
     for epoch in range(epochs):
-      metrics = train_epoch_(model, sensing_matrix, data, noise, use_median, n, positive_threshold, opt, use_mse, train_matrix)
+      metrics = train_epoch_(model, sensing_matrix, data, noise, use_median, n, positive_threshold, opt, use_mse)
       train_metrics.append(metrics)
       data.train_data.reset()
       test_metrics.append(test_epoch_(test_model, sensing_matrix, data, noise, use_median, n, positive_threshold))
