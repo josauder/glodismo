@@ -2,7 +2,7 @@ from data import MNIST, BernoulliSyntheticDataset, MNISTWavelet, Synthetic, BagO
 from recovery import NA_ALISTA, IHT
 from train import run_experiment
 from baseline import run_experiment_baseline, NeighborGenerator
-from sensing_matrices import CompletelyLearned, SuperPixel, Pixel, LeftDRegularGraph, LoadedFromNumpy, ConstructedPooling
+from sensing_matrices import CompletelyLearned, Pixel, LeftDRegularGraph, LoadedFromNumpy, ConstructedPooling
 from noise import GaussianNoise, StudentNoise, Noiseless
 import numpy as np
 from conf import device
