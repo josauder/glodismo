@@ -47,7 +47,7 @@ def test_epoch(model, sensing_matrix, data, noise, use_median, n, positive_thres
       "test_false_negatives": np.mean(false_negatives),
     }
 
-def train_epoch(model, sensing_matrix, data, noise, use_median, n, positive_threshold, opt, use_mse, train_matrix):
+def train_epoch(model, sensing_matrix, data, noise, use_median, n, positive_threshold, opt, use_mse, train_matrix, use_greedy_stabilization=False):
   train_loss_l2 = 0
   train_normalizer_l2 = 0
   train_loss_l1 = 0
@@ -77,7 +77,9 @@ def train_epoch(model, sensing_matrix, data, noise, use_median, n, positive_thre
       
 
     y = noise(forward_op(X))
-    Xhatt = model(y, forward_op, backward_op, data.psi, data.psistar)
+
+    Xhatt = model(y, forward_op, backward_op, data.psi, data.psistar, use_greedy_stabilization)
+
     Xhat = data.psistar(Xhatt)
 
     true_positives = (torch.abs(X) >= positive_threshold).int()
@@ -120,6 +122,7 @@ def run_experiment(
     positive_threshold,
     lr,
     test_model=False,
+    use_greedy_stabilization=False,
     ):
 
   model = model.to(device)
@@ -141,7 +144,7 @@ def run_experiment(
     opt = torch.optim.Adam(learnable_params, lr=lr)
 
     for epoch in range(epochs):
-      train_metrics.append(train_epoch(model, sensing_matrix, data, noise, use_median, n, positive_threshold, opt, use_mse, train_matrix))
+      train_metrics.append(train_epoch(model, sensing_matrix, data, noise, use_median, n, positive_threshold, opt, use_mse, train_matrix, use_greedy_stabilization))
       data.train_data.reset()
       test_metrics.append(test_epoch(test_model, sensing_matrix, data, noise, use_median, n, positive_threshold))
       print("Epoch:", epoch+1, "Test NMSE:", test_metrics[-1]['test_nmse'],   "Test NMAE:", test_metrics[-1]['test_nmae'], "Train NMSE:", train_metrics[-1]['train_nmse'],  "Train NMAE:", train_metrics[-1]['train_nmae'])

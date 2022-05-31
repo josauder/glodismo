@@ -56,7 +56,8 @@ class IHT(nn.Module):
         self.k = k
         self.s = s
 
-    def forward(self, y, forward_op, backward_op, psi, psistar):
+    def forward(self, y, forward_op, backward_op, psi, psistar, use_greedy_stabilization=False):
+        xs = []
         x = torch.zeros_like(backward_op(y))
         for i in range(self.k):
             a = forward_op(psistar(x))
@@ -64,6 +65,10 @@ class IHT(nn.Module):
             c = psi(backward_op(b))
             d = x + c
             x = hard_threshold(d, self.s)
+            if use_greedy_stabilization:
+                xs.apend(x)
+        if use_greedy_stabilization:
+            return torch.stack(xs).mean(dim=0)
         return x
 
     def save(self, name):
@@ -170,7 +175,8 @@ class NA_ALISTA(nn.Module):
 
         self.alpha = 0.99
 
-    def forward(self, y, forward_op, backward_op, psi, psistar):
+    def forward(self, y, forward_op, backward_op, psi, psistar, use_greedy_stabilization=False):
+        xs = []
         x = torch.zeros_like(backward_op(y), device=device)
         cellstate, hidden = self.regressor.get_initial(y.shape[0])
 
@@ -189,6 +195,11 @@ class NA_ALISTA(nn.Module):
             d = x + (gamma * c)
             s = np.clip(np.linspace(self.s / self.k, self.s * 1.4, self.k), 0, self.s*1.2).astype(np.int32)
             x = soft_threshold(d, theta, s[i])
+            
+            if use_greedy_stabilization:
+                xs.apend(x)
+        if use_greedy_stabilization:
+            return torch.stack(xs).mean(dim=0)
         return x
 
     def save(self, name):
@@ -215,8 +226,10 @@ class NA_NNLAD(nn.Module):
 
         self.alpha = 0.99
 
-    def forward(self, y, forward_op, backward_op, psi, psistar):
+    def forward(self, y, forward_op, backward_op, psi, psistar, use_greedy_stabilization=False):
         
+        xs = []
+
         x = self.x0.unsqueeze(0).repeat(y.shape[0], 1)
         v = self.v0.unsqueeze(0).repeat(y.shape[0], 1)
         w = self.w0.unsqueeze(0).repeat(y.shape[0], 1)
@@ -255,7 +268,10 @@ class NA_NNLAD(nn.Module):
             v_tilde = forward_op(v)
             x_tilde = 0.5 * (v_tilde + x_tilde)
             
-
+            if use_greedy_stabilization:
+                xs.apend(x)
+        if use_greedy_stabilization:
+            return torch.stack(xs).mean(dim=0)
         return x, None
 
     def save(self, name):
@@ -273,8 +289,8 @@ class NNLAD(nn.Module):
         self.tau = tau
 
 
-    def forward(self, y, forward_op, backward_op, psi, psistar):
-        
+    def forward(self, y, forward_op, backward_op, psi, psistar, use_greedy_stabilization=False):
+        xs = []
         x = torch.zeros_like(backward_op(y))
        
         v = torch.zeros_like(x)
@@ -293,7 +309,10 @@ class NNLAD(nn.Module):
             v = v + 2 * x
             v_tilde = forward_op(v)
             x_tilde = 0.5 * (v_tilde + x_tilde)
-
+            if use_greedy_stabilization:
+                xs.apend(x)
+        if use_greedy_stabilization:
+            return torch.stack(xs).mean(dim=0)
         return x
 
     def save(self, name):
